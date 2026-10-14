@@ -292,7 +292,7 @@ const DocumentBody = memo(() => {
     return (
       <AsyncError
         error={documentError}
-        variant={'block'}
+        variant={'page'}
         onRetry={() => void mutateDocumentMeta()}
       />
     );
