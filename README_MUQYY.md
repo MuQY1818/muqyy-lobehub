@@ -27,6 +27,8 @@ Neon 已停止允许安装 `pg_search`，当前部署显式选择 `FTS_SEARCH_PR
 
 ## 发布
 
+Vercel Hobby 需要设置 `NEXT_ENABLE_ADAPTER=0`，使用兼容的 Next.js 构建器合并路由；`NEXT_EXPERIMENTAL_FUNCTION_BUNDLING` 留空。`vercel.json` 统一函数超时为 300 秒，避免同类路由因为配置不同而拆分。新版部署适配器会为大量路由分别创建函数，超过 Hobby 的 12 个函数限制。
+
 先验证登录、聊天、文件上传与读取，再发布生产版本。Vercel CLI 上传大量源码文件时使用 `--archive=tgz`，发布目录不得包含 Git 元数据、`.env`、密钥、`node_modules` 或本地生成的构建文件。
 
 ```sh

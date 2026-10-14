@@ -1,5 +1,10 @@
 {
   "buildCommand": "bun run build:vercel",
+  "functions": {
+    "src/app/**": {
+      "maxDuration": 300
+    }
+  },
   "headers": [
     {
       "source": "/_spa/(.*)",
