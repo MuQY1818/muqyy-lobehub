@@ -186,3 +186,8 @@ apps/desktop/core-dist
 # Packaged builtin desktop core
 /apps/desktop/core.asar
 /apps/desktop/core.asar.unpacked/
+.vercel
+
+# Generated assets for the Muqyy deployment
+/apps/share/public/
+/apps/workbench/public/
