@@ -9,7 +9,7 @@
 使用 Node.js 22、pnpm 12.4.1、Bun 1.4.3 或更新版本。根据官方 `.env.example` 配置本地 `.env.local`，不要提交真实密钥。
 
 ```sh
-pnpm install --frozen-lockfile
+pnpm install
 bun run dev
 ```
 
