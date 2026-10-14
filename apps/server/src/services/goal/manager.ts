@@ -186,6 +186,8 @@ export const goalPlanSchema = z.discriminatedUnion('action', [
     })
     .strict(),
   z.object({ action: z.literal('escalate'), reason, ask: goalAskSchema.optional() }).strict(),
+  /** Answers a batch release handed over by the coordinator: the next wave goes out. */
+  z.object({ action: z.literal('release'), reason }).strict(),
 ]);
 type GoalPlan = z.infer<typeof goalPlanSchema>;
 const activeStatuses = new Set(['planning', 'running']);
@@ -226,6 +228,15 @@ const PLAN_REJECTION = {
   inactive: { message: 'Goal stopped or awaiting human decision', trpc: 'CONFLICT' },
   operation_mismatch: { message: 'Unrelated main Agent operation', trpc: 'FORBIDDEN' },
   pending_decision: { message: 'Goal stopped or awaiting human decision', trpc: 'CONFLICT' },
+  release_turn_only: {
+    message:
+      'This turn was handed a batch release; answer it with release, or escalate (without ask) for the owner to approve it',
+    trpc: 'BAD_REQUEST',
+  },
+  release_unsolicited: {
+    message: 'release only answers a batch release the coordinator handed to this turn',
+    trpc: 'BAD_REQUEST',
+  },
   review_changed: {
     message:
       'Task review feedback changed; exit without a plan so the next bounded turn can read it',
@@ -421,7 +432,15 @@ export const managerSnapshot = (graph: GoalGraphSnapshot) => {
  *  alone: "Task attempt budget was exhausted" is the same sentence for every task
  *  that reaches it, so a reason-only key makes the second task inherit the first
  *  one's answer. */
-export const problemKey = (problem: { reason: string; taskId?: string }) =>
+/** A problem the coordinator hands to the main Agent instead of stopping on a person. */
+export interface GoalTakeoverProblem {
+  /** `rollout_release`: a passed batch gate whose next wave the Agent releases or escalates. */
+  kind?: GoalManagerState['problemKind'];
+  reason: string;
+  taskId?: string;
+}
+
+export const problemKey = (problem: GoalTakeoverProblem) =>
   `${problem.taskId ?? 'goal'}::${problem.reason}`;
 
 /**
@@ -952,7 +971,7 @@ export class GoalManagerService {
    */
   takeOver = async (
     graph: GoalGraphSnapshot,
-    problem: { reason: string; taskId?: string },
+    problem: GoalTakeoverProblem,
   ): Promise<GoalTickResult | null> => {
     if (!this.eligible(graph)) return null;
     // Already answered: a takeover turn that ran for THIS problem has had its say,
@@ -1166,7 +1185,7 @@ export class GoalManagerService {
 
   private startTurn = async (
     graph: GoalGraphSnapshot,
-    problem?: { reason: string; taskId?: string },
+    problem?: GoalTakeoverProblem,
     continuation?: string,
   ): Promise<GoalTickResult | null> => {
     const { goal } = graph;
@@ -1287,6 +1306,7 @@ export class GoalManagerService {
         ...(problem
           ? {
               problem: problemKey(problem),
+              ...(problem.kind && { problemKind: problem.kind }),
               ...(problem.taskId && { problemTaskId: problem.taskId }),
             }
           : {}),
@@ -1354,6 +1374,7 @@ export class GoalManagerService {
           omittedFeedback: claimed.omittedFeedback,
           earlierFeedback: claimed.earlierFeedback,
           problem: problem?.reason,
+          problemKind: problem?.kind,
           continuation:
             continuation ??
             state?.replanReason ??
@@ -1480,6 +1501,19 @@ export class GoalManagerService {
     if ((await this.budgetFacts(graph, db)).blocked)
       return rejectPlan('budget_exhausted', op?.status);
     const unfinished = graph.nodes.filter((n) => n.kind === 'task' && !terminalNodes.has(n.status));
+    // A handed-over release has two answers: the Agent releases the wave, or a
+    // person approves it. New work or a question with buttons would leave the
+    // passed gate with nobody to release it.
+    const releaseTurn = state.problemKind === 'rollout_release';
+    if (plan?.action === 'release' && !releaseTurn)
+      return rejectPlan('release_unsolicited', op?.status);
+    if (
+      plan &&
+      releaseTurn &&
+      plan.action !== 'release' &&
+      (plan.action !== 'escalate' || plan.ask !== undefined)
+    )
+      return rejectPlan('release_turn_only', op?.status);
     // A takeover of the terminal acceptance can only be answered with `escalate`.
     // The acceptance task is matched by TITLE regardless of status, so a corrective
     // task returns to that same failed node and `verify` sets `readyForAcceptance`
@@ -1852,6 +1886,26 @@ export class GoalManagerService {
           ))
         )
           throw new TRPCError({ code: 'CONFLICT', message: 'Task changed before retry' });
+      } else if (plan.action === 'release') {
+        // The approval lands with the plan, under the same lock; the coordinator
+        // releases the wave on its next advance. It names the round and wave the
+        // gate passed for, so it can never release a later one.
+        const rollout = goal.config?.rolloutState;
+        if (!rollout || rollout.phase === 'done' || rollout.phase === 'pattern_break')
+          throw new TRPCError({
+            code: 'CONFLICT',
+            message: 'The batch is no longer waiting on a release',
+          });
+        await model.updateRolloutState(goalId, {
+          ...rollout,
+          releaseApproval: {
+            at: new Date().toISOString(),
+            by: 'agent',
+            reason: plan.reason,
+            revision: rollout.templateRevision,
+            waveIndex: rollout.waveIndex,
+          },
+        });
       } else if (plan.action === 'escalate' && state.problem && plan.ask) {
         // A takeover question is answered on the failed Task's gate, so every
         // answer has to say what happens to that Task — an answer that leaves it
