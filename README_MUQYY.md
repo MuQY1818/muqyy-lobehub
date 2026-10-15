@@ -25,6 +25,12 @@ Neon 已停止允许安装 `pg_search`，当前部署显式选择 `FTS_SEARCH_PR
 
 文件原件保存在 OSS，通过签名 URL 上传和访问。现有 API 不提供嵌入模型，因此设置 `CHUNKS_AUTO_EMBEDDING=0` 和 `CHUNKS_AUTO_GEN_METADATA=0`。文件聊天使用解析后的文本；语义知识库检索需另外接入可用的嵌入模型。
 
+## 图像生成
+
+两个账号各自添加自定义服务商 `laoli-image`（老李 GPT 图像），使用 OpenAI SDK 和 `https://video.laoliimage2.win/v1`，图像模型为 `gpt-image-2.5`。模型类型设为 `image`，请求走 `/images/generations`；尺寸默认为 `1024x1024`，每次生成 1 张。凭据保存在数据库的加密 Key Vault 中，使用老李站专用、仅允许该模型的令牌，分组为 “画布专用”。
+
+2026-10-15 配置验证时，老李站标准模型和 SR 路由均返回上游 HTTP 502，未交付图片，错误内容注明积分已退还。部分失败响应外层 HTTP 状态为 200，需要同时检查响应内容；此时 LobeHub 可能显示 `Invalid image response: missing or empty data array`。接入配置已保存，实际出图需在服务商恢复后再次验证。
+
 ## 发布
 
 Vercel Hobby 需要设置 `NEXT_ENABLE_ADAPTER=0`，使用兼容的 Next.js 构建器合并路由；`NEXT_EXPERIMENTAL_FUNCTION_BUNDLING` 留空。`vercel.json` 统一函数超时为 300 秒，避免同类路由因为配置不同而拆分。新版部署适配器会为大量路由分别创建函数，超过 Hobby 的 12 个函数限制。
