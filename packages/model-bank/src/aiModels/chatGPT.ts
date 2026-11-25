@@ -3,6 +3,7 @@ import { openaiChatModels } from './openai';
 
 const CHATGPT_MODEL_IDS = new Set([
   'gpt-6-astra',
+  'gpt-6.2-sol',
   'gpt-6.1-sol',
   'gpt-6-sol',
   'gpt-6-luna',

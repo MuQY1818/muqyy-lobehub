@@ -22,6 +22,8 @@ const MOBILE_NAV_ROUTES = new Set([
   '/community/model',
   '/community/provider',
   '/me',
+  // Muqyy: keep the tab bar on the mobile image page
+  '/image',
 ]);
 
 const MobileMainLayout: FC = () => {

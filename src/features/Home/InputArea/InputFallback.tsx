@@ -12,6 +12,7 @@ import {
   HOME_INPUT_FRAME_HEIGHT,
 } from './constants';
 import ModeSelect from './ModeSelect';
+import { SHOW_HOME_MODE_SELECT } from './muqyy';
 
 const styles = createStaticStyles(({ css, cssVar }) => ({
   actionBar: css`
@@ -120,7 +121,7 @@ const InputFallback = memo<InputFallbackProps>(
             justify="space-between"
           >
             <Flexbox horizontal align="center" gap={6}>
-              <ModeSelect value={mode} onChange={onModeChange} />
+              {SHOW_HOME_MODE_SELECT && <ModeSelect value={mode} onChange={onModeChange} />}
               <ActionIcon disabled icon={PlusIcon} size={'small'} title={t('loading')} />
             </Flexbox>
             <ActionIcon

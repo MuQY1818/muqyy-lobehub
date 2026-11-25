@@ -45,11 +45,23 @@ export const HOME_WIDGET_GROUPS = [
 
 export type HomeWidgetGroupKey = (typeof HOME_WIDGET_GROUPS)[number]['key'];
 
+// Muqyy: chat-first Home. Mirrors the selector fallbacks in
+// store/global/selectors/systemStatus.ts so "Reset" lands on the same layout.
 export const HOME_CUSTOMIZE_DEFAULTS = {
-  hiddenHomeWidgets: [] as string[],
+  hiddenHomeWidgets: [
+    'goals',
+    'needsYou',
+    'unread',
+    'running',
+    'news',
+    'usage',
+    'suggestions',
+    'tasks',
+    'scheduledTasks',
+  ] as string[],
   homeRecentsCount: 8,
   homeTaskCount: 8,
-  showHomePortrait: true,
+  showHomePortrait: false,
 };
 
 export const HOME_COUNT_MIN = 3;

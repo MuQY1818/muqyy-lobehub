@@ -228,6 +228,20 @@ export const sharedMainAreaChildren: RouteObject[] = [
     path: 'community',
   },
 
+  // Muqyy: image generation on mobile (reuses the desktop page)
+  {
+    children: [
+      {
+        element: dynamicElement(() => import('@/routes/(mobile)/image'), 'Mobile > Image', {
+          preloadId: 'mobile-image',
+        }),
+        index: true,
+      },
+    ],
+    errorElement: <ErrorBoundary resetPath=".." />,
+    path: 'image',
+  },
+
   // Agents view-all route (flat list of workspace/private agents)
   {
     children: [

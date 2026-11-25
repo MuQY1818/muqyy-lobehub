@@ -132,7 +132,16 @@ const taskKanbanHiddenColumns = (s: GlobalState): string[] =>
 const taskKanbanHiddenPanelCollapsed = (s: GlobalState): boolean =>
   s.status.taskKanbanHiddenPanelCollapsed ?? false;
 
-export const DEFAULT_HIDDEN_SECTIONS: string[] = [];
+// Muqyy: keep the sidebar focused on chat and image generation; users can
+// still re-enable these from "Customize sidebar".
+export const DEFAULT_HIDDEN_SECTIONS: string[] = [
+  'tasks',
+  'resource',
+  'project',
+  'community',
+  'pages',
+  'memory',
+];
 
 /** Sections hidden by default in workspace mode until the user customizes
  * sidebar visibility. `recents` lives in personal mode where the catch-all
@@ -382,8 +391,23 @@ const mobileShowTopic = (s: GlobalState) => s.status.mobileShowTopic;
 const mobileShowPortal = (s: GlobalState) => s.status.mobileShowPortal;
 const showAgentBuilderPanel = (s: GlobalState) => s.status.showAgentBuilderPanel;
 const showHomeRail = (s: GlobalState) => s.status.showHomeRail ?? true;
-const showHomePortrait = (s: GlobalState) => s.status.showHomePortrait ?? true;
-const hiddenHomeWidgets = (s: GlobalState): string[] => s.status.hiddenHomeWidgets ?? [];
+// Muqyy: Home defaults to a chat-first layout (no portrait, no agent/task
+// feeds or suggestion rail); only recent topics stay. Keep in sync with
+// HOME_CUSTOMIZE_DEFAULTS in features/Home/CustomizeModal/config.ts.
+export const DEFAULT_HOME_HIDDEN_WIDGETS: string[] = [
+  'goals',
+  'needsYou',
+  'unread',
+  'running',
+  'news',
+  'usage',
+  'suggestions',
+  'tasks',
+  'scheduledTasks',
+];
+const showHomePortrait = (s: GlobalState) => s.status.showHomePortrait ?? false;
+const hiddenHomeWidgets = (s: GlobalState): string[] =>
+  s.status.hiddenHomeWidgets ?? DEFAULT_HOME_HIDDEN_WIDGETS;
 const homeGoalsCollapsed = (s: GlobalState): boolean => s.status.homeGoalsCollapsed ?? false;
 const homeRecentsCount = (s: GlobalState): number => s.status.homeRecentsCount ?? 8;
 const homeTaskCount = (s: GlobalState): number => s.status.homeTaskCount ?? 8;

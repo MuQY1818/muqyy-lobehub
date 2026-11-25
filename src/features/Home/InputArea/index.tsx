@@ -18,7 +18,6 @@ import { EditorSlot } from './EditorSlot';
 import { stripMarkdownLinks } from './hintFormat';
 import { InputBannerQueue, InputBannerSegment } from './InputBanner';
 import InputDragUpload from './InputDragUpload';
-import MessengerBanner, { MESSENGER_BANNER_ID } from './MessengerBanner';
 import { useSend } from './useSend';
 
 const styles = createStaticStyles(({ css }) => ({
@@ -61,7 +60,9 @@ const InputArea = ({
   const isStatusInit = useGlobalStore(systemStatusSelectors.isStatusInit);
   const chatInputRef = useRef<HTMLDivElement>(null);
 
-  const showInputBanners = mode === 'chat' && isStatusInit;
+  // Muqyy: the only remaining banner is the opt-in new-model strip; the
+  // messenger promo is dropped because this deployment has no bot channels.
+  const showInputBanners = mode === 'chat' && isStatusInit && !!showNewModelShortcuts;
 
   // Get agent's model info for vision support check. Falls back to an empty
   // id while the agent id resolves; the selectors return DEFAULT_MODEL /
@@ -119,9 +120,6 @@ const InputArea = ({
                 <NewModelShortcuts />
               </InputBannerSegment>
             )}
-            <InputBannerSegment dismissId={MESSENGER_BANNER_ID}>
-              <MessengerBanner />
-            </InputBannerSegment>
           </InputBannerQueue>
         )}
       </Flexbox>

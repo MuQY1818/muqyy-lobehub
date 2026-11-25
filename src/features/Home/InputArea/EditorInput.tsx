@@ -15,6 +15,7 @@ import { useChatStore } from '@/store/chat';
 import type { HomeMode } from '../types';
 import { HOME_INPUT_BODY_HEIGHT } from './constants';
 import ModeSelect from './ModeSelect';
+import { SHOW_HOME_MODE_SELECT } from './muqyy';
 
 const leftActions: ActionKeys[] = ['plus'];
 const rightActions: ActionKeys[] = ['model'];
@@ -99,7 +100,7 @@ const HomeEditorInput = memo<HomeEditorInputProps>(
           showControlBar={false}
           leftContent={
             <Flexbox horizontal align={'center'} gap={2}>
-              <ModeSelect value={mode} onChange={onModeChange} />
+              {SHOW_HOME_MODE_SELECT && <ModeSelect value={mode} onChange={onModeChange} />}
               {mode !== 'chat' ? null : isAgentConfigLoading ? (
                 <ActionIcon disabled icon={PlusIcon} size={'small'} />
               ) : (

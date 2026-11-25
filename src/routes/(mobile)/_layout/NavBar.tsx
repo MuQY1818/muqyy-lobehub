@@ -4,7 +4,7 @@ import { Icon } from '@lobehub/ui';
 import { type TabBarProps } from '@lobehub/ui/mobile';
 import { TabBar } from '@lobehub/ui/mobile';
 import { createStaticStyles } from 'antd-style';
-import { Compass, MessageSquare, User } from 'lucide-react';
+import { Compass, ImageIcon, MessageSquare, User } from 'lucide-react';
 import { memo, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -47,6 +47,17 @@ const NavBar = memo(() => {
             navigate('/agent');
           },
           title: t('tab.chat'),
+        },
+        // Muqyy: image generation tab next to chat
+        {
+          icon: (active: boolean) => (
+            <Icon className={active ? styles.active : undefined} icon={ImageIcon} />
+          ),
+          key: SidebarTabKey.Image,
+          onClick: () => {
+            navigate('/image');
+          },
+          title: t('tab.generation'),
         },
         showMarket && {
           icon: (active: boolean) => (

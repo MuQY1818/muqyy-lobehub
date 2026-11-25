@@ -430,7 +430,6 @@ const Home = memo(() => {
       >
         <Flexbox className={styles.inputArea} gap={12}>
           <InputArea
-            showNewModelShortcuts
             inputValue={inputValue}
             mode={mode}
             onInputValueChange={handleInputValueChange}
