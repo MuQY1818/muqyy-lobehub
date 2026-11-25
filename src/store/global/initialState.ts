@@ -5,6 +5,12 @@ import { SessionDefaultGroup } from '@/types/session';
 import { type TopicGroupMode } from '@/types/topic';
 import { AsyncLocalStorage } from '@/utils/localStorage';
 
+import {
+  applyMuqyyLayoutDefaults,
+  MUQYY_HIDDEN_HOME_WIDGETS,
+  MUQYY_SHOW_HOME_PORTRAIT,
+} from './muqyyLayout';
+
 export enum SidebarTabKey {
   Chat = 'chat',
   Community = 'community',
@@ -315,6 +321,8 @@ export interface SystemStatus {
   showCommandMenu?: boolean;
   showFilePanel?: boolean;
   showHomePortrait?: boolean;
+  /** Muqyy: version of the one-time chat-first layout migration applied. */
+  muqyyLayoutVersion?: number;
   /**
    * Visibility of the Home dashboard's activity and recommendations rail.
    * Independent from `showRightPanel` so Home preferences do not affect chat pages.
@@ -530,7 +538,7 @@ export const INITIAL_STATUS = {
   fileManagerViewMode: 'list' as const,
   filePanelWidth: 320,
   groupAgentBuilderPanelWidth: 360,
-  hiddenHomeWidgets: [],
+  hiddenHomeWidgets: [...MUQYY_HIDDEN_HOME_WIDGETS],
   hidePWAInstaller: false,
   hideThreadLimitAlert: false,
   hideTopicSharePrivacyWarning: false,
@@ -554,7 +562,7 @@ export const INITIAL_STATUS = {
   resourceManagerColumnWidths: DEFAULT_RESOURCE_MANAGER_COLUMN_WIDTHS,
   showCommandMenu: false,
   showFilePanel: true,
-  showHomePortrait: true,
+  showHomePortrait: MUQYY_SHOW_HOME_PORTRAIT,
   showHotkeyHelper: false,
   showHomeRail: true,
   showImagePanel: true,
@@ -592,7 +600,7 @@ const statusStorage = new AsyncLocalStorage<SystemStatus>('LOBE_SYSTEM_STATUS');
  * pre-hydration placeholder to the default width.
  */
 export const createInitialSystemStatus = (): SystemStatus => {
-  const persistedStatus = statusStorage.getFromLocalStorageSync();
+  const persistedStatus = applyMuqyyLayoutDefaults(statusStorage.getFromLocalStorageSync());
 
   return {
     ...INITIAL_STATUS,

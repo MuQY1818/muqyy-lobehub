@@ -1,3 +1,5 @@
+import { MUQYY_HIDDEN_HOME_WIDGETS, MUQYY_SHOW_HOME_PORTRAIT } from '@/store/global/muqyyLayout';
+
 // The sections HomeInbox owns. Kept apart from the full key list because the
 // main column's standalone blocks (recents, tasks) are rendered by
 // HomeModeContent rather than HomeInbox.
@@ -45,23 +47,13 @@ export const HOME_WIDGET_GROUPS = [
 
 export type HomeWidgetGroupKey = (typeof HOME_WIDGET_GROUPS)[number]['key'];
 
-// Muqyy: chat-first Home. Mirrors the selector fallbacks in
-// store/global/selectors/systemStatus.ts so "Reset" lands on the same layout.
+// Muqyy: chat-first Home, shared with the store defaults so "Reset" lands on
+// the same layout.
 export const HOME_CUSTOMIZE_DEFAULTS = {
-  hiddenHomeWidgets: [
-    'goals',
-    'needsYou',
-    'unread',
-    'running',
-    'news',
-    'usage',
-    'suggestions',
-    'tasks',
-    'scheduledTasks',
-  ] as string[],
+  hiddenHomeWidgets: [...MUQYY_HIDDEN_HOME_WIDGETS],
   homeRecentsCount: 8,
   homeTaskCount: 8,
-  showHomePortrait: false,
+  showHomePortrait: MUQYY_SHOW_HOME_PORTRAIT,
 };
 
 export const HOME_COUNT_MIN = 3;

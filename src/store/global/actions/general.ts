@@ -29,6 +29,7 @@ import {
   DEFAULT_SIDEBAR_ITEMS,
   routeOverlayWrites,
 } from '../selectors/systemStatus';
+import { applyMuqyyLayoutDefaults } from '../muqyyLayout';
 import type { GlobalStore } from '../store';
 
 const n = setNamespace('g');
@@ -328,7 +329,8 @@ export class GlobalGeneralActionImpl {
 
           // Reset transient UI states that should not persist across page reloads
           const statusWithResetTransientStates = {
-            ...status,
+            // Muqyy: one-time chat-first layout for browsers that opened the site before
+            ...applyMuqyyLayoutDefaults(status),
             showCommandMenu: false,
             showHotkeyHelper: false,
             workingSidebarRevealRequest: undefined,

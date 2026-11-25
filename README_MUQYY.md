@@ -2,7 +2,7 @@
 
 基于 LobeHub v2.2.19（234e0fc7）的私人网页聊天部署。生产分支为 `deploy/muqyy-lobehub`。
 
-采用 Vercel、Neon PostgreSQL 和阿里云 OSS。聊天模型使用 OpenAI 兼容中转的 GPT 6.1 Sol，文件存储桶为私有，用户通过邮箱与密码登录。
+采用 Vercel、Neon PostgreSQL 和阿里云 OSS。聊天模型使用 OpenAI 兼容中转的 GPT-6.2 Sol（默认）和 GPT-6.1 Sol，文件存储桶为私有，用户通过邮箱与密码登录。
 
 ## 本地开发与二次开发
 
@@ -27,9 +27,20 @@ Neon 已停止允许安装 `pg_search`，当前部署显式选择 `FTS_SEARCH_PR
 
 ## 图像生成
 
-两个账号各自添加自定义服务商 `laoli-image`（老李 GPT 图像），使用 OpenAI SDK 和 `https://video.laoliimage2.win/v1`，图像模型为 `gpt-image-2.5`。模型类型设为 `image`，请求走 `/images/generations`；尺寸默认为 `1024x1024`，每次生成 1 张。凭据保存在数据库的加密 Key Vault 中，使用老李站专用、仅允许该模型的令牌，分组为 “画布专用”。
+两个账号各有两个自定义服务商：`laoli-image`（显示为「GPT 生图 · 普通」，默认 1024×1024）和 `laoli-image-4k`（「GPT 生图 · 4K」，默认 3840×2160，可选 2160×3840）。均使用 OpenAI SDK、`https://video.laoliimage2.win/v1` 和 `/images/generations`，每次生成 1 张。凭据保存在数据库的加密 Key Vault 中，使用老李站「画布专用」分组下、只允许指定模型的专用令牌。
 
-2026-10-15 配置验证时，老李站标准模型和 SR 路由均返回上游 HTTP 502，未交付图片，错误内容注明积分已退还。部分失败响应外层 HTTP 状态为 200，需要同时检查响应内容；此时 LobeHub 可能显示 `Invalid image response: missing or empty data array`。接入配置已保存，实际出图需在服务商恢复后再次验证。
+2026-11 老李站改了模型目录，原 `gpt-image-2.5` 已下线，令牌返回 `403 当前凭据无权执行此操作`。现在两种模式都使用 `特价2.5-flare-可用鸡蛋`（1K 0.02、4K 0.04 积分/张，与原价相同），令牌另允许同价的 `特价2.5-sunburst-可用鸡蛋` 作备用。2026-11-25 实测 1024×1024 与 3840×2160 均出图。老李站再改名时，先在其 `/api/pricing` 查新模型 ID，再同步修改令牌的模型限制和两个服务商里的模型 ID。
+
+部分失败响应外层 HTTP 状态为 200，需要同时检查响应内容；此时 LobeHub 可能显示 `Invalid image response: missing or empty data array`。
+
+## 界面精简
+
+面向非技术用户，默认只保留对话、上传文件和生图：
+
+- 侧边栏默认隐藏任务、资源、项目、社区、文稿、记忆；首页隐藏吉祥物、推荐卡片、动态和「上新」横幅，并隐藏 Agent/任务模式切换；对话输入框下方的模式、设备、审批控制栏整体隐藏，账号审批模式设为自动批准。默认值集中在 `src/store/global/muqyyLayout.ts`，每个浏览器首次加载时一次性应用（`muqyyLayoutVersion`），之后以用户自己的自定义为准。
+- 手机端新增 `/image` 生图页和底部「生图」标签，复用电脑端页面并自行加载话题列表。
+- `FEATURE_FLAGS=-market,-welcome_suggest,-changelog,-check_updates`。
+- 默认助手改名为「GPT 助手」。
 
 ## 发布
 
@@ -37,6 +48,12 @@ Vercel Hobby 需要设置 `NEXT_ENABLE_ADAPTER=0`，使用兼容的 Next.js 构�
 
 先验证登录、聊天、文件上传与读取，再发布生产版本。Vercel CLI 上传大量源码文件时使用 `--archive=tgz`，发布目录不得包含 Git 元数据、`.env`、密钥、`node_modules` 或本地生成的构建文件。
 
+仓库没有提交 lockfile，Vercel 每次按最新版本解析依赖；`hono-openapi` 和 `@standard-community/standard-openapi` 已在 `pnpm-workspace.yaml` 与 `package.json` 的 overrides 中锁定到 2026-10 可构建的版本。若再次出现依赖相关的构建失败，参照归档的 `node_modules/.pnpm` 版本补充 overrides。
+
+必须从不含 `.git` 的导出目录部署，否则 Vercel 会读取提交作者并以邮箱未关联 GitHub 为由阻止部署。先 `--skip-domain` 部署并验证，再 `vercel promote`：
+
 ```sh
-vercel deploy --prod --yes --archive=tgz --scope muqy1818s-projects
+rm -rf ../deploy-export && mkdir ../deploy-export && git archive HEAD | tar -x -C ../deploy-export && cp -r .vercel ../deploy-export/
+cd ../deploy-export && vercel deploy --prod --skip-domain --yes --archive=tgz --scope muqy1818s-projects
+vercel promote <部署地址> --scope muqy1818s-projects
 ```

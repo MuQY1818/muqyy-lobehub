@@ -16,6 +16,12 @@ import ApprovalMode from './ApprovalMode';
 import ModeSelector from './ModeSelector';
 import WorkspaceControls from './WorkspaceControls';
 
+/**
+ * Muqyy: the mode / device / approval chips are power-user controls. This
+ * deployment keeps agent mode with auto-approval and hides the whole bar.
+ */
+const MUQYY_HIDE_CHAT_CONTROL_BAR = true;
+
 const styles = createStaticStyles(({ css }) => ({
   // `flex: none` keeps the row at 28px inside the column-flex composer; without
   // it the bar shrinks to the compact chips' min-content height.
@@ -55,7 +61,7 @@ const ControlBar = memo(() => {
   const isLoading = useAgentStore((s) => agentByIdSelectors.isAgentConfigLoadingById(agentId)(s));
   const { isAgentRuntimeMode, isPreferenceLoading } = useEffectiveAgentMode(agentId);
 
-  if (!canShowControls || isPreferenceLoading) return null;
+  if (MUQYY_HIDE_CHAT_CONTROL_BAR || !canShowControls || isPreferenceLoading) return null;
 
   // Skeleton placeholder to prevent layout jump during loading
   if (!agentId || isLoading) {

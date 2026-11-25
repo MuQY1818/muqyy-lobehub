@@ -29,6 +29,8 @@ import { featureFlagsSelectors, useServerConfigStore } from '@/store/serverConfi
 import { useUserStore } from '@/store/user';
 import { labPreferSelectors } from '@/store/user/selectors';
 
+const MUQYY_SHOW_AGENT_TASKS = false;
+
 const Nav = memo(() => {
   const { t } = useTranslation('chat');
   const { t: tTopic } = useTranslation('topic');
@@ -132,15 +134,18 @@ const Nav = memo(() => {
           }}
         />
       )}
-      <NavItem
-        active={isTasksActive}
-        icon={ListTodoIcon}
-        title={t('tab.tasks')}
-        onClick={() => {
-          switchTopic(null, { skipRefreshMessage: true });
-          router.push(urlJoin('/agent', agentId!, 'tasks'));
-        }}
-      />
+      {/* Muqyy: the task board is not used in this deployment */}
+      {MUQYY_SHOW_AGENT_TASKS && (
+        <NavItem
+          active={isTasksActive}
+          icon={ListTodoIcon}
+          title={t('tab.tasks')}
+          onClick={() => {
+            switchTopic(null, { skipRefreshMessage: true });
+            router.push(urlJoin('/agent', agentId!, 'tasks'));
+          }}
+        />
+      )}
     </Flexbox>
   );
 });
